@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Girish Lade - Full-Stack Developer & Researcher</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍💻</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Dark blue-gray background */
+            color: #d1d5db; /* Light gray text */
+        }
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+        .relative-content {
+            position: relative;
+            z-index: 1;
+        }
+        .glass-effect {
+            background: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .skill-card:hover, .service-card:hover, .research-card:hover, .initiative-card:hover, .saas-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.2), 0 4px 6px -2px rgba(99, 102, 241, 0.1);
+        }
+        
+        @keyframes cardFadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .project-card {
+            border: 1px solid transparent;
+            transition: all 0.4s ease;
+            display: none;
+        }
+        .project-card.visible {
+            display: flex;
+            animation: cardFadeInUp 0.5s ease-out forwards;
+        }
+        .project-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.2), 0 10px 10px -5px rgba(79, 70, 229, 0.1);
+            border-color: #4f46e5;
+        }
+
+        .nav-link { position: relative; transition: color 0.3s ease; }
+        .nav-link::after {
+            content: ''; position: absolute; width: 0; height: 2px;
+            bottom: -4px; left: 50%; transform: translateX(-50%);
+            background-color: #6366f1; transition: width 0.3s ease;
+        }
+        .nav-link:hover::after, .nav-link.active::after { width: 100%; }
+        
+        .section-title { position: relative; display: inline-block; padding-bottom: 8px; }
+        .section-title::after {
+            content: ''; position: absolute; width: 50%; height: 3px;
+            bottom: 0; left: 25%; background: linear-gradient(90deg, #818cf8, #4f46e5);
+            border-radius: 2px;
+        }
+        .filter-btn { transition: all 0.3s ease; }
+        .filter-btn.active { background-color: #4f46e5; color: #ffffff; }
+
+        /* Timeline */
+        .timeline-item .timeline-icon {
+            background-color: #1f2937;
+            border: 3px solid #4f46e5;
+        }
+        .timeline-item { 
+            border-left-color: #374151;
+            padding-bottom: 2rem;
+        }
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+        }
+        
+        /* Testimonial Slider */
+        .testimonial-slider { display: flex; transition: transform 0.5s ease-in-out; }
+        .testimonial-item { min-width: 100%; }
+
+        /* Scroll to top button */
+        #scroll-to-top {
+            position: fixed; bottom: 20px; right: 20px;
+            background-color: #4f46e5; color: white;
+            width: 40px; height: 40px; border-radius: 50%;
+            display: none; justify-content: center; align-items: center;
+            cursor: pointer; transition: opacity 0.3s, transform 0.3s;
+            opacity: 0; transform: translateY(20px);
+        }
+        #scroll-to-top.visible {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Upcoming Project Badge */
+        .upcoming-badge {
+            position: absolute;
+            top: -1px;
+            right: -1px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #422006;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-top-right-radius: 0.5rem;
+            border-bottom-left-radius: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .blinking-cursor {
+            animation: blink 1s step-end infinite;
+        }
+        @keyframes blink {
+            from, to { color: transparent; }
+            50% { color: #6366f1; }
+        }
+        
+        /* Modal Styles */
+        #explanation-modal-backdrop {
+            transition: opacity 0.3s ease-in-out;
+        }
+        #explanation-modal {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="relative-content">
+        <!-- Header -->
+        <header id="header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+            <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+                <a href="#" class="text-2xl font-bold text-white">Girish Lade</a>
+                <div class="hidden md:flex items-center space-x-8">
+                    <!-- Nav links removed -->
+                </div>
+                <a href="https://github.com/girishlade111" target="_blank" class="hidden md:block bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                    GitHub Profile
+                </a>
+                <button id="mobile-menu-button" class="md:hidden text-white focus:outline-none">
+                    <i data-feather="menu" class="w-6 h-6"></i>
+                </button>
+            </nav>
+            <div id="mobile-menu" class="hidden md:hidden bg-gray-800">
+                <!-- Mobile nav links removed -->
+                <a href="https://github.com/girishlade111" target="_blank" class="block py-2 px-4 text-sm text-gray-300 hover:bg-gray-700">GitHub Profile</a>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-6">
+            <!-- Hero Section -->
+            <section id="hero" class="min-h-screen flex items-center">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div class="text-center md:text-left">
+                        <h1 class="text-4xl md:text-6xl font-extrabold text-white leading-tight mb-4">
+                            Hi, I'm <span class="text-indigo-400">Girish Lade</span>
+                        </h1>
+                        <p class="text-xl md:text-2xl text-gray-300 mb-8">
+                            Full-Stack Developer, AI Researcher, and SaaS Innovator.
+                        </p>
+                        <div class="flex justify-center md:justify-start space-x-4">
+                            <a href="#contact" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">
+                                Get In Touch
+                            </a>
+                            <a href="#projects" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105">
+                                View My Work
+                            </a>
+                        </div>
+                    </div>
+                    <div class="hidden md:block">
+                        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEglYKjhiYyynnPGufxBzpYbJ3oucByfn8U3PN0B22AQpbJhTs71wECjfG7ntkTdfolPcTtUTTppLgW5hMs2htgFrT_OXbZUTPzfs2EXmyYwQUDKKvMF9P9z9xDD9LG1MXxdnn_mJkLIlhn4ECrXIcWcJj7j_Vz8i1q0XLo7ab5Nb4PskhtM5gGUmI0m/s4624/IMG20241201100709.jpg" alt="Girish Lade Profile Picture" class="rounded-full object-cover w-[400px] h-[400px] shadow-2xl mx-auto border-4 border-indigo-500/50">
+                    </div>
+                </div>
+            </section>
+
+            <!-- About Section -->
+            <section id="about" class="py-20">
+                <h2 class="section-title text-3xl font-bold text-center mb-12 text-white">About Me</h2>
+                <div class="max-w-4xl mx-auto glass-effect rounded-xl p-8 md:p-12">
+                    <div class="flex flex-col md:flex-row items-center gap-8">
+                        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi6n4TnI6APXK1HGC2AOb5WCyuWTfTLv2i4HbOcHcDwGtrJOnuocIYa1NPXjQ2f5ndGt0uJ54sl5fXY-2R7K0EcVP0QXErfWDpJRsxjQhj46sMa19o6W_4Lki_YOMoTN0yvgg76QT-Hg3i29HKSitetHKV7UD2U6o5NI7S_lw7fHTTBn6_REJtdvgPM/s1280/IMG_20221202_142414_344.jpg" alt="Girish Lade" class="w-32 h-32 rounded-full object-cover flex-shrink-0 border-4 border-gray-700">
+                        <p class="text-lg text-gray-300 leading-relaxed">
+                            I'm a dedicated Full-Stack Developer and AI enthusiast with a knack for creating efficient, scalable, and intelligent applications. With experience in both web development and machine learning, I enjoy bridging the gap between user-friendly interfaces and powerful, data-driven backends. I'm always eager to tackle new challenges and contribute to innovative projects.
+                        </p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Services Section -->
+            <section id="services" class="py-20">
+                <h2 class="section-title text-3xl font-bold text-center mb-12 text-white">What I Do</h2>
+                <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <div class="service-card bg-gray-800 p-8 rounded-lg text-center transition-all duration-300">
+                        <i data-feather="cpu" class="w-12 h-12 text-indigo-400 mx-auto mb-4"></i>
+                        <h3 class="text-xl font-bold text-white mb-2">AI & Machine Learning</h3>
+                        <p class="text-gray-400">Developing and deploying models for deep learning, data science, and computer vision applications.</p>
+                    </div>
+                    <div class="service-card bg-gray-800 p-8 rounded-lg text-center transition-all duration-300">
+                        <i data-feather="server" class="w-12 h-12 text-indigo-400 mx-auto mb-4"></i>
+                        <h3 class="text-xl font-bold text-white mb-2">Full-Stack Development</h3>
+                        <p class="text-gray-400">Building robust end-to-end applications with modern front-end and back-end technologies.</p>
+                    </div>
+                    <div class="service-card bg-gray-800 p-8 rounded-lg text-center transition-all duration-300">
+                        <i data-feather="box" class="w-12 h-12 text-indigo-400 mx-auto mb-4"></i>
+                        <h3 class="text-xl font-bold text-white mb-2">SaaS Product Development</h3>
+                        <p class="text-gray-400">Conceptualizing, building, and launching complete Software-as-a-Service products from the ground up.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Featured SaaS Products Section -->
+            <section id="saas" class="py-20 bg-gray-900">
+                <div class="container mx-auto px-6">
+                    <h2 class="section-title text-3xl font-bold text-center mb-12 text-white">Featured SaaS Products</h2>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                        <div class="saas-card bg-gray-800 p-6 rounded-lg transition-all duration-300 flex flex-col">
+                            <div class="flex-shrink-0"><i data-feather="terminal" class="w-10 h-10 text-indigo-400 mb-4"></i></div>
+                            <h3 class="text-lg font-bold text-white mb-2">AI Code Compiler & Viewer</h3>
+                            <p class="text-gray-400 text-sm mb-4 flex-grow">Unleash your coding potential with an intelligent compiler that not only executes HTML, CSS, and JS, but also provides AI-powered suggestions and optimizations to elevate your code.</p>
+                            <a href="#" class="mt-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg transition-colors w-full text-center">Visit</a>
+                        </div>
+                        <div class="saas-card bg-gray-800 p-6 rounded-lg transition-all duration-300 flex flex-col">
+                             <div class="flex-shrink-0"><i data-feather="layers" class="w-10 h-10 text-indigo-400 mb-4"></i></div>
+                            <h3 class="text-lg font-bold text-white mb-2">AI Website Builder</h3>
+                            <p class="text-gray-400 text-sm mb-4 flex-grow">Build stunning, professional websites and applications in minutes. Our AI-driven platform empowers you to create without code, turning your vision into reality effortlessly.</p>
+                             <a href="#" class="mt-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg transition-colors w-full text-center">Visit</a>
+                        </div>
+                        <div class="saas-card bg-gray-800 p-6 rounded-lg transition-all duration-300 flex flex-col">
+                             <div class="flex-shrink-0"><i data-feather="align-left" class="w-10 h-10 text-indigo-400 mb-4"></i></div>
+                            <h3 class="text-lg font-bold text-white mb-2">AI Text Summarizer</h3>
+                            <p class="text-gray-400 text-sm mb-4 flex-grow">Transform lengthy documents into concise, easy-to-digest summaries. Our advanced AI captures the key points, saving you time and boosting productivity.</p>
+                             <a href="#" class="mt-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg transition-colors w-full text-center">Visit</a>
+                        </div>
+                        <div class="saas-card bg-gray-800 p-6 rounded-lg transition-all duration-300 flex flex-col">
+                             <div class="flex-shrink-0"><i data-feather="gift" class="w-10 h-10 text-indigo-400 mb-4"></i></div>
+                            <h3 class="text-lg font-bold text-white mb-2">Open Source Component Library</h3>
+                            <p class="text-gray-400 text-sm mb-4 flex-grow">Accelerate your development with a rich library of free, pre-built components for React, Next.js, and more, complete with detailed prompts and source code.</p>
+                             <a href="#" class="mt-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg transition-colors w-full text-center">Visit</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Featured Initiatives Section -->
+            <section id="initiatives" class="py-20">
+                <h2 class="section-title text-3xl font-bold text-center mb-12 text-white">Community Initiatives</h2>
+                <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div class="initiative-card glass-effect p-8 rounded-lg transition-all duration-300 flex flex-col items-center text-center">
+                        <i data-feather="message-circle" class="w-12 h-12 text-indigo-400 mb-4"></i>
+                        <h3 class="text-2xl font-bold text-white mb-2">Your AI Buddy</h3>
+                        <p class="text-gray-400 mb-6 flex-grow">A platform offering custom AI chatbot solutions to help businesses automate conversations and improve user experience.</p>
+                        <a href="https://sites.google.com/view/youraibuddy/home" target="_blank" class="mt-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg transition-colors">Visit Site</a>
+                    </div>
+                    <div class="initiative-card glass-effect p-8 rounded-lg transition-all duration-300 flex flex-col items-center text-center">
+                        <i data-feather="code" class="w-12 h-12 text-indigo-400 mb-4"></i>
+                        <h3 class="text-2xl font-bold text-white mb-2">Code Templates</h3>
+                        <p class="text-gray-400 mb-6 flex-grow">A collection of free, ready-to-use code templates for various web components and layouts to help developers build faster.</p>
+                        <a href="https://sites.google.com/view/code-templates/home" target="_blank" class="mt-auto bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-5 rounded-lg transition-colors">Get Templates</a>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Research Section -->
+            <section id="research" class="py-20">
+                <h2 class="section-title text-3xl font-bold text-center mb-12 text-white">Research Publications</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div class="research-card bg-gray-800 p-6 rounded-lg transition-all duration-300 flex flex-col">
+                        <i data-feather="file-text" class="w-8 h-8 text-indigo-400 mb-4"></i>
+                        <h3 class="text-lg font-bold text-white mb-2">Deepfake Detection Using Deep Learning</h3>
+                        <p class="text-gray-400 text-sm mb-4 flex-grow">A comprehensive study on using CNNs to detect manipulated video content, achieving high accuracy on public datasets.</p>
+                        <a href="https://sites.google.com/view/deep-research-/research-paper" target="_blank" class="mt-auto text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-2">Read Paper <i data-feather="arrow-right" class="w-4 h-4"></i></a>
+                    </div>
+                    <div class="research-card bg-gray-800 p-6 rounded-lg transition-all duration-300 flex flex-col">
+                        <i data-feather="file-text" class="w-8 h-8 text-indigo-400 mb-4"></i>
+                        <h3 class="text-lg font-bold text-white mb-2">Comparative Analysis of ML Algorithms</h3>
+                        <p class="text-gray-400 text-sm mb-4 flex-grow">An analysis of various machine learning algorithms for specific data classification tasks, outlining performance metrics.</p>
+                        <a href="https://sites.google.com/view/deep-research-/research-paper" target="_blank" class="mt-auto text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-2">Read Paper <i data-feather="arrow-right" class="w-4 h-4"></i></a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Experience Timeline Section -->
+            <section id="experience" class="py-20">
+                <h2 class="section-title text-3xl font-bold text-center mb-12 text-white">My Journey</h2>
+                <div class="max-w-3xl mx-auto">
+                    <div class="relative pl-8 py-4 border-l-2 border-gray-700 timeline-item">
+                        <div class="absolute -left-4 top-5 w-8 h-8 rounded-full flex items-center justify-center timeline-icon">
+                           <i data-feather="rocket" class="w-4 h-4 text-indigo-400"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold text-white">Founder & Creator</h4>
+                        <p class="text-indigo-400 text-sm mb-1">Your AI Buddy & Code Templates | 2023 - Present</p>
+                        <p class="text-gray-400 text-sm">Launched two community-focused platforms to provide AI solutions and developer resources, managing everything from concept and development to launch.</p>
+                    </div>
+                    <div class="relative pl-8 py-4 border-l-2 border-gray-700 timeline-item">
+                        <div class="absolute -left-4 top-5 w-8 h-8 rounded-full flex items-center justify-center timeline-icon">
+                           <i data-feather="briefcase" class="w-4 h-4 text-indigo-400"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold text-white">Full Stack Developer</h4>
+                        <p class="text-indigo-400 text-sm mb-1">Wipro | 2022 - Present</p>
+                        <p class="text-gray-400 text-sm">Developing and maintaining enterprise-level web applications. Collaborating with global teams to deliver high-quality, scalable software solutions.</p>
+                    </div>
+                    <div class="relative pl-8 py-4 border-l-2 border-gray-700 timeline-item">
+                        <div class="absolute -left-4 top-5 w-8 h-8 rounded-full flex items-center justify-center timeline-icon">
+                           <i data-feather="cpu" class="w-4 h-4 text-indigo-400"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold text-white">Independent AI Researcher</h4>
+                        <p class="text-indigo-400 text-sm mb-1">2021 - Present</p>
+                        <p class="text-gray-400 text-sm">Conducting research in deep learning, focusing on areas like deepfake detection and model analysis, leading to multiple publications.</p>
+                    </div>
+                    <div class="relative pl-8 py-4 border-l-2 border-gray-700 timeline-item">
+                        <div class="absolute -left-4 top-5 w-8 h-8 rounded-full flex items-center justify-center timeline-icon">
+                           <i data-feather="book-open" class="w-4 h-4 text-indigo-400"></i>
+                        </div>
+                        <h4 class="text-lg font-semibold text-white">Bachelor of Engineering</h4>
+                        <p class="text-indigo-400 text-sm mb-1">Savitribai Phule Pune University | 2016 - 2020</p>
+                        <p class="text-gray-400 text-sm">Graduated with a degree in Computer Engineering, specializing in software development, algorithms, and data structures.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Upcoming Projects Section -->
+            <section id="upcoming-projects" class="py-20">
+                <h2 class="section-title text-3xl font-bold text-center mb-12 text-white">Upcoming Projects</h2>
+                <div id="upcoming-projects-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                     <!-- Upcoming projects will be dynamically inserted here -->
+                </div>
+            </section>
+
+            <!-- Projects Section -->
+            <section id="projects" class="py-20">
+                <div class="text-center mb-12">
+                    <h2 class="section-title text-3xl font-bold text-white inline-block">My GitHub Projects</h2>
+                </div>
+                <div id="project-filters" class="flex flex-wrap justify-center gap-2 md:gap-4 my-12"></div>
+                <div id="projects-grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div id="loader" class="col-span-full text-center text-gray-400"><p>Loading projects from GitHub...</p></div>
+                </div>
+                <div id="no-projects-message" class="col-span-full text-center text-gray-400 hidden"><p>No projects found for this category.</p></div>
+                <div id="show-more-container" class="text-center mt-12">
+                    <button id="show-more-btn" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 hidden">Show More</button>
+                </div>
+            </section>
+            
+            <!-- Contact Section -->
+            <section id="contact" class="py-20">
+                <h2 class="section-title text-3xl font-bold text-center mb-12 text-white">Contact Me</h2>
+                <div class="max-w-2xl mx-auto glass-effect rounded-xl p-8">
+                    <p class="text-center text-lg text-gray-300 mb-8">
+                        I'm currently open to new opportunities and collaborations. Feel free to reach out.
+                    </p>
+                    <div class="flex flex-col md:flex-row justify-center items-center gap-6 mb-8">
+                         <a href="mailto:girishlade111@email.com" class="flex items-center gap-2 text-indigo-300 hover:text-indigo-400 transition-colors">
+                            <i data-feather="mail" class="w-5 h-5"></i> girishlade111@email.com
+                        </a>
+                        <a href="https://www.linkedin.com/in/girish-lade-075bba201/" target="_blank" class="flex items-center gap-2 text-indigo-300 hover:text-indigo-400 transition-colors">
+                            <i data-feather="linkedin" class="w-5 h-5"></i> LinkedIn Profile
+                        </a>
+                    </div>
+                    <form action="#" method="POST">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <input type="text" placeholder="Your Name" class="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <input type="email" placeholder="Your Email" class="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <textarea placeholder="Your Message" rows="5" class="w-full bg-gray-800 border border-gray-700 rounded-lg py-3 px-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-6"></textarea>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                            Send Message
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-gray-900 mt-20">
+            <div class="container mx-auto px-6 py-8 text-center text-gray-400">
+                <div class="flex justify-center space-x-6 mb-4">
+                    <a href="https://github.com/girishlade111" target="_blank" class="hover:text-indigo-400 transition-colors"><i data-feather="github" class="w-6 h-6"></i></a>
+                    <a href="https://www.linkedin.com/in/girish-lade-075bba201/" target="_blank" class="hover:text-indigo-400 transition-colors"><i data-feather="linkedin" class="w-6 h-6"></i></a>
+                    <a href="https://www.instagram.com/girish_lade_/" target="_blank" class="hover:text-indigo-400 transition-colors"><i data-feather="instagram" class="w-6 h-6"></i></a>
+                    <a href="https://codepen.io/Girish-Lade-the-looper" target="_blank" class="hover:text-indigo-400 transition-colors"><i data-feather="codepen" class="w-6 h-6"></i></a>
+                </div>
+                <p>&copy; <span id="year"></span> Girish Lade. All Rights Reserved.</p>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Explanation Modal -->
+    <div id="explanation-modal-backdrop" class="fixed inset-0 bg-black bg-opacity-70 z-50 hidden items-center justify-center p-4">
+        <div id="explanation-modal" class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform scale-95 opacity-0">
+            <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                <h3 id="modal-title" class="text-xl font-bold text-white">AI Project Explanation</h3>
+                <button id="close-modal-btn" class="text-gray-400 hover:text-white">&times;</button>
+            </div>
+            <div id="modal-content" class="p-6 overflow-y-auto text-gray-300">
+                <!-- AI content will be injected here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scroll to Top Button -->
+    <button id="scroll-to-top">
+        <i data-feather="arrow-up" class="w-6 h-6"></i>
+    </button>
+
+
+    <script>
+        // --- Particle Animation ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particlesArray;
+        let mouse = { x: null, y: null, radius: (canvas.height/120) * (canvas.width/120) };
+        window.addEventListener('mousemove', function(event) { mouse.x = event.x; mouse.y = event.y; });
+        class Particle {
+            constructor(x, y, directionX, directionY, size, color) {
+                this.x = x; this.y = y; this.directionX = directionX; this.directionY = directionY; this.size = size; this.color = color;
+            }
+            draw() {
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+                ctx.fillStyle = 'rgba(165, 180, 252, 0.5)'; ctx.fill();
+            }
+            update() {
+                if (this.x > canvas.width || this.x < 0) { this.directionX = -this.directionX; }
+                if (this.y > canvas.height || this.y < 0) { this.directionY = -this.directionY; }
+                let dx = mouse.x - this.x; let dy = mouse.y - this.y; let distance = Math.sqrt(dx*dx + dy*dy);
+                if (distance < mouse.radius + this.size){
+                    if(mouse.x < this.x && this.x < canvas.width - this.size * 10) { this.x += 5; }
+                    if (mouse.x > this.x && this.x > this.size * 10) { this.x -= 5; }
+                    if (mouse.y < this.y && this.y < canvas.height - this.size * 10) { this.y += 5; }
+                    if (mouse.y > this.y && this.y > this.size * 10) { this.y -= 5; }
+                }
+                this.x += this.directionX; this.y += this.directionY; this.draw();
+            }
+        }
+        function init() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let size = (Math.random() * 2) + 1;
+                let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+                let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+                let directionX = (Math.random() * 0.4) - 0.2;
+                let directionY = (Math.random() * 0.4) - 0.2;
+                particlesArray.push(new Particle(x, y, directionX, directionY, size, '#8C9EFF'));
+            }
+        }
+        function animate() {
+            requestAnimationFrame(animate); ctx.clearRect(0,0,innerWidth, innerHeight);
+            for (let i = 0; i < particlesArray.length; i++) { particlesArray[i].update(); }
+            connect();
+        }
+        function connect(){
+            let opacityValue = 1;
+            for (let a = 0; a < particlesArray.length; a++) {
+                for (let b = a; b < particlesArray.length; b++) {
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                    if (distance < (canvas.width/7) * (canvas.height/7)) {
+                        opacityValue = 1 - (distance/20000);
+                        ctx.strokeStyle='rgba(199, 210, 254,' + opacityValue + ')'; ctx.lineWidth = 1;
+                        ctx.beginPath(); ctx.moveTo(particlesArray[a].x, particlesArray[a].y); ctx.lineTo(particlesArray[b].x, particlesArray[b].y); ctx.stroke();
+                    }
+                }
+            }
+        }
+        window.addEventListener('resize', function(){
+            canvas.width = innerWidth; canvas.height = innerHeight;
+            mouse.radius = (canvas.height/120) * (canvas.width/120); init();
+        });
+        window.addEventListener('mouseout', function(){ mouse.x = undefined; mouse.y = undefined; });
+        init(); animate();
+
+        // --- Feather Icons ---
+        feather.replace();
+
+        // --- Mobile Menu Toggle ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => { mobileMenu.classList.toggle('hidden'); });
+        
+        // --- Header background on scroll ---
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) { header.classList.add('glass-effect', 'shadow-lg'); } 
+            else { header.classList.remove('glass-effect', 'shadow-lg'); }
+        });
+
+        // --- Active Nav Link on Scroll ---
+        const sections = document.querySelectorAll('main section');
+        const navLinks = document.querySelectorAll('.nav-link');
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 150) { current = section.getAttribute('id'); }
+            });
+            navLinks.forEach(link => {
+                link.classList.remove('active', 'text-white');
+                if (link.getAttribute('href').includes(current)) { link.classList.add('active', 'text-white'); }
+            });
+        });
+
+        // --- GitHub Projects Logic ---
+        const GITHUB_USERNAME = 'girishlade111';
+        const projectsGrid = document.getElementById('projects-grid');
+        const upcomingProjectsGrid = document.getElementById('upcoming-projects-grid');
+        const loader = document.getElementById('loader');
+        const projectFiltersContainer = document.getElementById('project-filters');
+        const noProjectsMessage = document.getElementById('no-projects-message');
+        const showMoreBtn = document.getElementById('show-more-btn');
+        let allRepos = [], currentProjects = [], currentCategory = 'all', visibleProjectsCount = 0;
+        const PROJECTS_PER_PAGE = 6;
+
+        function renderProjects(reposToRender, gridElement) {
+            if (!gridElement) return;
+            gridElement.innerHTML = '';
+            
+            if (reposToRender.length === 0) {
+                 if(loader) loader.remove();
+                 return;
+            }
+
+            reposToRender.forEach(repo => {
+                const tags = repo.topics.filter(t => t !== 'upcoming').map(topic => `<span class="inline-block bg-gray-700 rounded-full px-3 py-1 text-sm font-semibold text-gray-300 mr-2 mb-2">${topic}</span>`).join('');
+                const projectCard = document.createElement('div');
+                projectCard.className = 'project-card bg-gray-800 rounded-lg p-6 flex flex-col justify-between relative overflow-hidden';
+                projectCard.setAttribute('data-category', repo.topics.join(' ') || 'uncategorized');
+                
+                projectCard.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <i data-feather="folder" class="w-8 h-8 text-indigo-400"></i>
+                            <a href="${repo.html_url}" target="_blank" class="hover:text-indigo-400 transition-colors"><i data-feather="external-link" class="w-5 h-5"></i></a>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">${repo.name.replace(/-/g, ' ').replace(/_/g, ' ')}</h3>
+                        <p class="text-gray-400 text-sm mb-4 h-20 overflow-hidden">${repo.description || 'No description available.'}</p>
+                    </div>
+                    <div class="mt-auto">
+                        <div class="mb-4">
+                            ${tags || (repo.language ? `<span class="inline-block bg-gray-700 rounded-full px-3 py-1 text-sm font-semibold text-gray-300 mr-2 mb-2">${repo.language}</span>` : '')}
+                        </div>
+                        <div class="flex items-center text-xs text-gray-500 mb-4">
+                            <span class="flex items-center mr-4"><i data-feather="star" class="w-4 h-4 mr-1"></i> ${repo.stargazers_count}</span>
+                            <span class="flex items-center"><i data-feather="git-branch" class="w-4 h-4 mr-1"></i> ${repo.forks_count}</span>
+                        </div>
+                        <button class="explain-btn w-full bg-indigo-500/20 hover:bg-indigo-500/40 text-indigo-300 font-semibold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                                data-name="${repo.name}" 
+                                data-description="${repo.description || ''}" 
+                                data-topics="${repo.topics.join(', ')}"
+                                data-language="${repo.language || ''}">
+                            <i data-feather="sparkles" class="w-4 h-4"></i> Explain Project
+                        </button>
+                    </div>
+                `;
+                gridElement.appendChild(projectCard);
+            });
+            if (loader) loader.remove();
+            feather.replace();
+            filterAndShowProjects();
+        }
+
+        function filterAndShowProjects() {
+            const allCards = Array.from(projectsGrid.getElementsByClassName('project-card'));
+            let filteredCards = (currentCategory === 'all') ? allCards : allCards.filter(card => card.dataset.category.includes(currentCategory));
+            allCards.forEach(card => card.classList.remove('visible'));
+            let delay = 0;
+            filteredCards.slice(0, visibleProjectsCount).forEach(card => {
+                card.style.animationDelay = `${delay}s`; card.classList.add('visible'); delay += 0.1;
+            });
+            noProjectsMessage.classList.toggle('hidden', filteredCards.length > 0);
+            showMoreBtn.classList.toggle('hidden', visibleProjectsCount >= filteredCards.length);
+        }
+
+        function setupFilters(repos) {
+            const topics = new Set();
+            repos.forEach(repo => { repo.topics.forEach(topic => {
+                if(topic !== 'upcoming') topics.add(topic)
+            }); });
+            projectFiltersContainer.innerHTML = `<button class="filter-btn active bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg" data-category="all">All</button>`;
+            topics.forEach(topic => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg capitalize';
+                btn.dataset.category = topic; btn.textContent = topic.replace(/-/g, ' ');
+                projectFiltersContainer.appendChild(btn);
+            });
+            if (projectFiltersContainer) {
+                projectFiltersContainer.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'BUTTON') return;
+                    currentCategory = e.target.dataset.category; visibleProjectsCount = PROJECTS_PER_PAGE;
+                    projectFiltersContainer.querySelector('.active').classList.remove('active');
+                    e.target.classList.add('active'); filterAndShowProjects();
+                });
+            }
+        }
+        if (showMoreBtn) {
+            showMoreBtn.addEventListener('click', () => { 
+                visibleProjectsCount = allRepos.length;
+                filterAndShowProjects();
+            });
+        }
+
+        async function fetchRepos() {
+            try {
+                const response = await fetch(`https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=pushed&per_page=100`);
+                if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
+                const allFetchedRepos = await response.json();
+                const nonForkedRepos = allFetchedRepos.filter(repo => !repo.fork);
+
+                const upcomingProjects = nonForkedRepos.filter(repo => repo.topics.includes('upcoming'));
+                currentProjects = nonForkedRepos.filter(repo => !repo.topics.includes('upcoming'));
+                
+                allRepos = currentProjects;
+                
+                renderUpcomingProjects(upcomingProjects, upcomingProjectsGrid);
+                renderProjects(currentProjects, projectsGrid);
+                setupFilters(currentProjects); 
+
+            } catch (error) {
+                console.error("Failed to fetch GitHub repos:", error);
+                if (loader) loader.innerText = "Could not load projects.";
+            }
+        }
+        
+        function renderUpcomingProjects(repos, gridElement) {
+             if (!gridElement) return;
+            gridElement.innerHTML = '';
+            
+             if (repos.length === 0) {
+                gridElement.innerHTML = `<p class="col-span-full text-center text-gray-400">No upcoming projects announced yet. Stay tuned!</p>`;
+                return;
+            }
+
+            repos.forEach(repo => {
+                const projectCard = document.createElement('div');
+                projectCard.className = 'project-card visible bg-gray-800/70 rounded-lg p-6 flex-col justify-between relative overflow-hidden border-2 border-dashed border-gray-700';
+                
+                projectCard.innerHTML = `
+                    <div class="upcoming-badge">In Development</div>
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <i data-feather="compass" class="w-8 h-8 text-amber-400"></i>
+                            <a href="${repo.html_url}" target="_blank" class="hover:text-amber-300 transition-colors"><i data-feather="external-link" class="w-5 h-5"></i></a>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">${repo.name.replace(/-/g, ' ').replace(/_/g, ' ')}</h3>
+                        <p class="text-gray-400 text-sm mb-4 h-20 overflow-hidden">${repo.description || 'No description available.'}</p>
+                    </div>
+                    <div class="flex items-center text-xs text-gray-500 mt-auto">
+                        <span class="flex items-center mr-4"><i data-feather="star" class="w-4 h-4 mr-1"></i> ${repo.stargazers_count}</span>
+                        <span class="flex items-center"><i data-feather="git-branch" class="w-4 h-4 mr-1"></i> ${repo.forks_count}</span>
+                    </div>
+                `;
+                gridElement.appendChild(projectCard);
+            });
+            feather.replace();
+        }
+
+        fetchRepos(); 
+        visibleProjectsCount = PROJECTS_PER_PAGE;
+
+        // --- Gemini API Project Explainer Modal ---
+        const modalBackdrop = document.getElementById('explanation-modal-backdrop');
+        const modal = document.getElementById('explanation-modal');
+        const modalContent = document.getElementById('modal-content');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        function showModal() {
+            modalBackdrop.classList.remove('hidden');
+            modalBackdrop.classList.add('flex');
+            setTimeout(() => {
+                modalBackdrop.classList.remove('opacity-0');
+                modal.classList.remove('opacity-0', 'scale-95');
+            }, 10);
+        }
+
+        function hideModal() {
+            modalBackdrop.classList.add('opacity-0');
+            modal.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                modalBackdrop.classList.add('hidden');
+                modalBackdrop.classList.remove('flex');
+            }, 300);
+        }
+
+        if (projectsGrid) {
+            projectsGrid.addEventListener('click', async (e) => {
+                const explainBtn = e.target.closest('.explain-btn');
+                if (!explainBtn) return;
+
+                const { name, description, topics, language } = explainBtn.dataset;
+                
+                showModal();
+                modalContent.innerHTML = `<p>Generating AI explanation for <strong>${name}</strong>... <span class="blinking-cursor">_</span></p>`;
+                explainBtn.disabled = true;
+
+                const prompt = `
+                    As a technical project analyst, provide a detailed explanation for the following GitHub project.
+                    The explanation should be easy for both technical and non-technical people to understand.
+
+                    **Project Name:** ${name}
+                    **Description:** ${description}
+                    **Language:** ${language}
+                    **Technologies/Topics:** ${topics}
+
+                    Please structure your response in two parts with clear headings:
+                    1.  **Detailed Explanation:** Describe what the project is, its purpose, and how the technologies are used.
+                    2.  **Potential Use Cases:** List 2-3 practical applications or scenarios where this project could be used.
+
+                    Keep the tone professional and informative. Format the headings in bold.
+                `;
+                
+                try {
+                    let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                    const payload = { contents: chatHistory };
+                    const apiKey = "AIzaSyDK68voN4wRnCh95nrlu0m9vHbtJKOECqM"; // User's API Key
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        // Simple markdown to HTML conversion
+                        const htmlText = text
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                            .replace(/\n/g, '<br>'); // Newlines
+                        modalContent.innerHTML = htmlText;
+                    } else {
+                         modalContent.innerHTML = "<p>Sorry, I couldn't generate a summary at this time. The response from the AI was empty.</p>";
+                    }
+                } catch (error) {
+                    console.error("Gemini API Error:", error);
+                    modalContent.innerHTML = "<p>Sorry, there was an error connecting to the AI service. Please try again later.</p>";
+                } finally {
+                    explainBtn.disabled = false;
+                }
+            });
+        }
+        
+        if(closeModalBtn) closeModalBtn.addEventListener('click', hideModal);
+        if(modalBackdrop) modalBackdrop.addEventListener('click', (e) => {
+            if (e.target === modalBackdrop) {
+                hideModal();
+            }
+        });
+
+
+        // --- Testimonial Slider ---
+        const slider = document.getElementById('testimonial-slider');
+        const prevBtn = document.getElementById('prev-testimonial');
+        const nextBtn = document.getElementById('next-testimonial');
+        const testimonials = document.querySelectorAll('.testimonial-item');
+        let currentIndex = 0;
+        function showTestimonial(index) {
+            if (slider) slider.style.transform = `translateX(-${index * 100}%)`;
+        }
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex > 0) ? currentIndex - 1 : testimonials.length - 1;
+                showTestimonial(currentIndex);
+            });
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex < testimonials.length - 1) ? currentIndex + 1 : 0;
+                showTestimonial(currentIndex);
+            });
+        }
+        if(testimonials && testimonials.length > 1) {
+            setInterval(() => { if(nextBtn) nextBtn.click() }, 5000); // Auto-slide every 5 seconds
+        }
+
+        // --- Scroll to Top Button ---
+        const scrollToTopBtn = document.getElementById('scroll-to-top');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollToTopBtn.classList.add('visible');
+            } else {
+                scrollToTopBtn.classList.remove('visible');
+            }
+        });
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // --- Set current year in footer ---
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
